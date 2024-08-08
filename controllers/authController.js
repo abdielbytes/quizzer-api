@@ -10,19 +10,15 @@ const generateToken = (id) => {
 };
 
 exports.registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
-
-  try {
-    const user = new User({ name, email, password });
-    await user.save();
-
-    const token = generateToken(user._id);
-
-    res.status(201).json({ token });
-  } catch (err) {
-    res.status(400).json({ error: err.message });
-  }
-};
+    try {
+      const { name, email, password } = req.body;
+      const user = new User({ name, email, password });
+      await user.save();
+      res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
 
 exports.loginUser = async (req, res) => {
   const { email, password } = req.body;
