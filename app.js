@@ -1,32 +1,40 @@
+// app.js
 const express = require('express');
-const cors = require('cors'); // Import the CORS middleware
 const connectDB = require('./config/db');
 const bodyParser = require('body-parser');
 const authRoutes = require('./routes/authRoutes');
 const quizRoutes = require('./routes/quizRoutes');
 const dotenv = require('dotenv');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
 const app = express();
 
-// Connect to the database
+// Connect to MongoDB
 connectDB();
 
-// Configure CORS options
+// Enable CORS
 const corsOptions = {
-  origin: 'http://localhost:8080', // Allow requests only from this origin
-  methods: 'GET,POST,PUT,DELETE', // Allow specific HTTP methods
-  allowedHeaders: 'Content-Type,Authorization' // Allow specific headers
+  origin: 'http://localhost:8080',
+  methods: 'GET,POST,PUT,DELETE',
+  allowedHeaders: 'Content-Type,Authorization',
 };
-
-// Enable CORS with options
 app.use(cors(corsOptions));
 
-// Middleware
+// Apply rate limiting to all requests
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+});
+app.use(limiter);
+
+// Body parser middleware
 app.use(bodyParser.json());
 
-// Define Routes
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/quizzes', quizRoutes);
 
