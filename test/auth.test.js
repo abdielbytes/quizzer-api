@@ -1,11 +1,24 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const app = require('../app');
-const expect = chai.expect;
+const mongoose = require('mongoose');
+const User = require('../models/User'); // Adjust the path if needed
 
+const { expect } = chai;
 chai.use(chaiHttp);
 
 describe('Auth API', () => {
+  // Setup before all tests
+  before(async () => {
+    await mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+  });
+
+  // Cleanup after all tests
+  after(async () => {
+    await User.deleteMany({}); // Clean up users after tests
+    await mongoose.disconnect();
+  });
+
   describe('POST /api/auth/register', () => {
     it('should register a new user', (done) => {
       chai.request(app)
