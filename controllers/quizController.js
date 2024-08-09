@@ -38,7 +38,6 @@ exports.getQuizById = async (req, res) => {
 
 
 
-
 exports.submitQuiz = async (req, res) => {
   const { quizId, userName, answers } = req.body;
 
@@ -49,15 +48,46 @@ exports.submitQuiz = async (req, res) => {
       return res.status(404).json({ error: 'Quiz not found' });
     }
 
+    let correctCount = 0;
+
+    const gradedAnswers = answers.map((answer) => {
+      const question = quiz.questions.id(answer.questionId);
+
+      if (!question) {
+        return { ...answer, correct: false, error: 'Question not found' };
+      }
+
+      // Find the selected option
+      const selectedOption = question.options.id(answer.selectedOptionId);
+
+      if (!selectedOption) {
+        return { ...answer, correct: false, error: 'Option not found' };
+      }
+
+      // Check if the selected option is correct
+      const isCorrect = selectedOption.isCorrect;
+      if (isCorrect) correctCount += 1;
+
+      return {
+        ...answer,
+        correct: isCorrect,
+      };
+    });
+
     const submission = new Submission({
       quiz: quizId,
       userName,
-      answers
+      answers: gradedAnswers,
     });
 
     await submission.save();
 
-    res.status(201).json({ message: 'Quiz submitted successfully', submission });
+    res.status(201).json({
+      message: 'Quiz submitted successfully',
+      correctAnswers: correctCount,
+      totalQuestions: quiz.questions.length,
+      submission,
+    });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
